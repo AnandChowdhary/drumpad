@@ -38,7 +38,7 @@ void setup() {
 
 void loop() {
 
-	String sendValues = "[ ";
+	String sendValues = "";
 
 	for (int i = 0; i < 4; i++) {
 		previousValues[i] = 0;
@@ -47,10 +47,8 @@ void loop() {
 			previousValues[i] = 1;
 			digitalWrite(i + 2, HIGH);
 		}
-		sendValues += String(previousValues[i]) + " ";
+		sendValues += String(previousValues[i]);
 	}
-
-	sendValues += "]";
 
 	if (sendValues != prevSendValue) {
 		Serial.println(sendValues);
