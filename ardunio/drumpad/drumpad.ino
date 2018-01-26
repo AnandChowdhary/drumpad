@@ -1,8 +1,8 @@
 /*
- * DrumPad
- * Copyright (c) 2018 Anand Chowdhary
- * MIT License
- */
+* DrumPad (Arduino code)
+* Copyright (c) 2018 Anand Chowdhary
+* MIT License
+*/
 
 #include <CapacitiveSensor.h>
 
@@ -16,14 +16,15 @@ CapacitiveSensor capacitiveSensors[4] = {
 	CapacitiveSensor(6, 7)
 };
 int previousValues[4] = { 0, 0, 0, 0 };
+String prevSendValue = "";
 
 void setup() {
 
 	// Turning off recalibration for all sensors
-	// capacitiveSensor1.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	// capacitiveSensor2.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	// capacitiveSensor3.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	// capacitiveSensor4.set_CS_AutocaL_Millis(0xFFFFFFFF);
+	/* capacitiveSensor1.set_CS_AutocaL_Millis(0xFFFFFFFF);
+	capacitiveSensor2.set_CS_AutocaL_Millis(0xFFFFFFFF);
+	capacitiveSensor3.set_CS_AutocaL_Millis(0xFFFFFFFF);
+	capacitiveSensor4.set_CS_AutocaL_Millis(0xFFFFFFFF); */
 
 	// Setting pins 2 to 5 to output for LEDs
 	for (int i = 2; i < 6; i++) {
@@ -51,8 +52,9 @@ void loop() {
 
 	sendValues += "]";
 
-	if (sendValues != "[ 0 0 0 0 ]") {
+	if (sendValues != prevSendValue) {
 		Serial.println(sendValues);
+		prevSendValue = sendValues;
 	}
 
 	// long start = millis();
