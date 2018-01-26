@@ -1,5 +1,5 @@
 {
     "board": "arduino:avr:uno",
     "port": "/dev/cu.usbmodem1421",
-    "sketch": "ardunio/drumpad.ino"
+    "sketch": "ardunio/drumpad/drumpad.ino"
 }
