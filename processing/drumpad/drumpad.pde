@@ -7,6 +7,7 @@
 import processing.serial.*;
 import processing.sound.*;
 Serial myPort;
+String instrument = "kawai-r50";
 
 void setup() {
 	myPort = new Serial(this, Serial.list()[3], 9600);
@@ -20,7 +21,7 @@ void draw() {
 			for (int i = 0; i < 4; i++) {
 				if (inByte.charAt(i) == '1') {
 					SoundFile file;
-					file = new SoundFile(this, str(i) + ".aif");
+					file = new SoundFile(this, instrument + "/" + str(i) + ".wav");
 					file.play();
 				}
 			}
