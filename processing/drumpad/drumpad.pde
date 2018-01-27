@@ -20,6 +20,7 @@ String currentInstrument;
 PImage[] instrumentImages;
 
 int currentPage = 0;
+int volumeReading = 0;
 
 void setup() {
 
@@ -50,8 +51,6 @@ void setup() {
 		IO = new Serial(this, Serial.list()[0], 9600);
 	}
 
-	printArray(instruments);
-
 }
 
 void draw() {
@@ -76,6 +75,9 @@ void draw() {
 	textSize(24);
 	text(heading, 310, 80); 
 
+	textSize(13);
+	text(str(volumeReading) + "%", 177, 323);
+
 	// Check if Arduino is sending something
 	if (IO.available() > 0) {
 
@@ -87,7 +89,7 @@ void draw() {
 		if (readIoString != null) {
 
 			// Check whether we have potentiometer reading or instrument
-			if (!readIoString.contains("Potentiometer")) {
+			if (!readIoString.contains("Potentiometer") && !readIoString.contains("Volume")) {
 
 				// Loop through each instrument in input
 				// and play song if user pressed the input
@@ -100,6 +102,7 @@ void draw() {
 						// Will catch exception if file doesn't exist
 						try {
 							audioSample = new SoundFile(this, "samples/" + currentInstrument + "/" + str(i) + ".wav");
+							audioSample.amp(float(volumeReading) / 100);
 							audioSample.play();
 						} catch(RuntimeException e) {
 							println("Error: Could not find the required sound file");
@@ -108,6 +111,9 @@ void draw() {
 					}
 				}
 
+			// Check if volume knob has moved and update volume
+			} else if (readIoString.contains("Volume reading")) {
+				volumeReading = int(map(int(readIoString.replace("Volume reading: ", "").trim()), 0, 1023, 0, 100));
 			} else {
 
 				// Get the value of new instrument using potentiometer

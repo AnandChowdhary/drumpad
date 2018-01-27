@@ -22,10 +22,7 @@ void setup() {
 
 	// Turning off recalibration for all sensors
 	// I've hardcoded the sensor input limit for now
-	capacitiveSensor1.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	capacitiveSensor2.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	capacitiveSensor3.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	capacitiveSensor4.set_CS_AutocaL_Millis(0xFFFFFFFF);
+	// capacitiveSensor4.set_CS_AutocaL_Millis(0xFFFFFFFF);
 
 	// Setting pins 2 to 5 to output for LEDs
 	for (int i = 2; i < 6; i++) {
