@@ -16,7 +16,7 @@ CapacitiveSensor capacitiveSensors[4] = {
 	CapacitiveSensor(6, 7)
 };
 int previousValues[4] = { 0, 0, 0, 0 };
-String prevSendValue = "";
+String prevSendValue = "0000";
 
 void setup() {
 
@@ -31,6 +31,9 @@ void setup() {
 		pinMode(i, OUTPUT);
 	}
 
+	// Turn on a software pull-up for the pushbutton
+	digitalWrite(A5, HIGH);
+
 	// Prepare to send data on 9600
 	Serial.begin(9600);
 
@@ -39,6 +42,8 @@ void setup() {
 void loop() {
 
 	String sendValues = "";
+
+	Serial.println("Potentiometer reading: " +  String(analogRead(A0)));
 
 	for (int i = 0; i < 4; i++) {
 		previousValues[i] = 0;

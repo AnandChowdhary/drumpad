@@ -53,23 +53,39 @@ void draw() {
 		// Recommendation: https://stackoverflow.com/a/29507239/1656944
 		if (readIoString != null) {
 
-			// Loop through each instrument in input
-			for (int i = 0; i < nInputs; i++) {
+			// Check whether we have potentiometer reading or instrument
+			if (!readIoString.contains("Potentiometer")) {
 
-				// Play song if user pressed the input
-				if (readIoString.charAt(i) == '1') {
+				// Loop through each instrument in input
+				// and play song if user pressed the input
+				for (int i = 0; i < nInputs; i++) {
+					if (readIoString.charAt(i) == '1') {
 
-					SoundFile audioSample;
+						SoundFile audioSample;
 
-					// Try to play the file
-					// Will catch exception if file doesn't exist
-					try {
-						audioSample = new SoundFile(this, "samples/" + currentInstrument + "/" + str(i) + ".wav");
-						audioSample.play();
-					} catch(RuntimeException e) {
-						println("Error: Could not find the required sound file");
+						// Try to play the file
+						// Will catch exception if file doesn't exist
+						try {
+							audioSample = new SoundFile(this, "samples/" + currentInstrument + "/" + str(i) + ".wav");
+							audioSample.play();
+						} catch(RuntimeException e) {
+							println("Error: Could not find the required sound file");
+						}
+
 					}
+				}
 
+			} else {
+
+				// Get the value of new instrument using potentiometer
+				// Map potentiometer value to 0 to instruments.length
+				// and get value using instruments[mapped value]
+				String newInstrument = instruments[int(map(int(readIoString.replace("Potentiometer reading: ", "").trim()), 0, 1023, 0, float(instruments.length) - 0.001))];
+
+				// If we have a new instrument, switch to that
+				if (!currentInstrument.equals(newInstrument)) {
+					currentInstrument = newInstrument;
+					println(newInstrument);
 				}
 
 			}
