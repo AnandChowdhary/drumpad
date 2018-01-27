@@ -21,18 +21,16 @@ String prevSendValue = "0000";
 void setup() {
 
 	// Turning off recalibration for all sensors
-	/* capacitiveSensor1.set_CS_AutocaL_Millis(0xFFFFFFFF);
+	// I've hardcoded the sensor input limit for now
+	capacitiveSensor1.set_CS_AutocaL_Millis(0xFFFFFFFF);
 	capacitiveSensor2.set_CS_AutocaL_Millis(0xFFFFFFFF);
 	capacitiveSensor3.set_CS_AutocaL_Millis(0xFFFFFFFF);
-	capacitiveSensor4.set_CS_AutocaL_Millis(0xFFFFFFFF); */
+	capacitiveSensor4.set_CS_AutocaL_Millis(0xFFFFFFFF);
 
 	// Setting pins 2 to 5 to output for LEDs
 	for (int i = 2; i < 6; i++) {
 		pinMode(i, OUTPUT);
 	}
-
-	// Turn on a software pull-up for the pushbutton
-	digitalWrite(A5, HIGH);
 
 	// Prepare to send data on 9600
 	Serial.begin(9600);
@@ -43,7 +41,8 @@ void loop() {
 
 	String sendValues = "";
 
-	Serial.println("Potentiometer reading: " +  String(analogRead(A0)));
+	Serial.println("Potentiometer reading: " +  String(analogRead(A1)));
+	Serial.println("Volume reading: " +  String(analogRead(A0)));
 
 	for (int i = 0; i < 4; i++) {
 		previousValues[i] = 0;

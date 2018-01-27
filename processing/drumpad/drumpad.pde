@@ -7,6 +7,7 @@
 import processing.serial.*;
 import processing.sound.*;
 Serial IO;
+PImage bg;
 
 // Number of inputs, currently hardcoded to `4`
 int nInputs = 4;
@@ -16,8 +17,15 @@ String[] instruments = {};
 
 // This global variable will contain the current instrument
 String currentInstrument;
+PImage[] instrumentImages;
+
+int currentPage = 0;
 
 void setup() {
+
+	// Basic UI
+	size(800, 500);
+	bg = loadImage("bg-default.png");
 
 	// Find available instruments from samples folder
 	File file = new File(sketchPath() + "/data/samples");
@@ -28,11 +36,19 @@ void setup() {
 			instruments = append(instruments, subFile.getName());
 		}
 	}
+	instrumentImages = new PImage[instruments.length];
+	for (int i = 0; i < instruments.length; i++) {
+		instrumentImages[i] = loadImage("https://tse2.mm.bing.net/th?q=" + instruments[i] + "&w=200&h=200", "jpeg");
+	}
 	// Set the current instrument as `drum`
 	currentInstrument = instruments[4];
 
 	// Start listening to Arduino's serial
-	IO = new Serial(this, Serial.list()[3], 9600);
+	try {
+		IO = new Serial(this, Serial.list()[3], 9600);
+	} catch(RuntimeException e) {
+		IO = new Serial(this, Serial.list()[0], 9600);
+	}
 
 	printArray(instruments);
 
@@ -40,8 +56,25 @@ void setup() {
 
 void draw() {
 
-	// Basic UI
-	size(100, 100);
+	background(bg);
+
+	String heading;
+
+	switch (currentPage) {
+		default:
+			heading = "Your Band";
+			fill(0);
+			textSize(16);
+			for (int i = 0; i < instruments.length; i++) {
+				text(instruments[i].substring(0, 1).toUpperCase() + instruments[i].substring(1) + (currentInstrument == instruments[i] ? " (current)" : ""), 375, 130 + i * 45);
+				image(instrumentImages[i], 300, 130 + i * 45 - 25, 50, 50);
+			}
+			break;
+	}
+
+	fill(0);
+	textSize(24);
+	text(heading, 310, 80); 
 
 	// Check if Arduino is sending something
 	if (IO.available() > 0) {
@@ -85,7 +118,6 @@ void draw() {
 				// If we have a new instrument, switch to that
 				if (!currentInstrument.equals(newInstrument)) {
 					currentInstrument = newInstrument;
-					println(newInstrument);
 				}
 
 			}
