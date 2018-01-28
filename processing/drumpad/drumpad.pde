@@ -31,7 +31,7 @@ PImage[] instrumentImages;
 * 0 -> "Your Band" home screen
 * 1 -> "Your Recordings" import screen
 */
-int currentPage = 1;
+int currentPage = 0;
 
 // Volume reading from the potentiometer stored here (0 to 100)
 int volumeReading = 0;

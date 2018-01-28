@@ -14,7 +14,7 @@ Drumpad is an Ardunio-based music generator built for my Programming and Physica
 
 ## Toolkit
 
-## Materials
+### Materials
 - Arduino Uno
 - 4 × 1MΩ resistors for capacitive sensors
 - 4 × 330Ω resistors for LEDs
@@ -35,6 +35,10 @@ Drumpad is an Ardunio-based music generator built for my Programming and Physica
 
 
 ## How it works
+
+### Fritzing structure
+
+![Fritzing structure](https://user-images.githubusercontent.com/2841780/35483888-ced36f86-0447-11e8-9c0c-a82fb746e37f.png)
 
 ### Directory Structure
 
