@@ -16,25 +16,49 @@ int nInputs = 4;
 String[] instruments = {};
 
 // This global array will contain list of exported files
-String[] exportedFiles = {};
+String[] exportedFiles;
 
 // This global variable will contain the current instrument
 String currentInstrument;
+
+// This global variable will contain the currently playing file
+int currentPlaying = -1;
+
+// This global array will contain the image for each instrument
 PImage[] instrumentImages;
 
-int currentPage = 0;
+int currentPage = 1;
 int volumeReading = 0;
-int recording = 0;
+int recording = 0, playing = 0;
 long recordingStartValue = 0;
 String[] recordingNotes = {};
 
 void fetchNewFiles() {
 	File file = new File(sketchPath() + "/exports");
+	exportedFiles = new String[file.list().length];
 	for (int i = 0; i < file.list().length; i++) {
 		File subFile = new File(sketchPath() + "/exports/" + file.list()[i]);
-		exportedFiles = append(exportedFiles, subFile.getName());
+		exportedFiles[i] = subFile.getName();
 	}
-	println(exportedFiles);
+}
+
+void playFile(String fileName) {
+	String[] soundInstructions = {};
+	String songLength;
+	// Try to play the file
+	// Will catch exception if file doesn't exist
+	try {
+		String[] musicLines = loadStrings(sketchPath() + "/exports/" + fileName);
+		for (int i = 0; i < musicLines.length; i++) {
+			if (!musicLines[i].equals("")) {
+				soundInstructions = append(soundInstructions, musicLines[i]);
+			}
+		}
+	} catch(RuntimeException e) {
+		println("Error: Could not find the required sound file");
+	}
+	songLength = soundInstructions[soundInstructions.length - 1];
+	println("LENGTH: " + songLength);
 }
 
 void setup() {
@@ -57,11 +81,12 @@ void setup() {
 			instruments = append(instruments, subFile.getName());
 		}
 	}
-	instrumentImages = new PImage[instruments.length + 1];
+	instrumentImages = new PImage[instruments.length + 2];
 	for (int i = 0; i < instruments.length; i++) {
 		instrumentImages[i] = loadImage("https://tse2.mm.bing.net/th?q=" + instruments[i] + "&w=200&h=200", "jpeg");
 	}
 	instrumentImages[instruments.length] = loadImage("https://tse2.mm.bing.net/th?q=music+folder+icon&w=200&h=200", "jpeg");
+	instrumentImages[instruments.length + 1] = loadImage("https://tse2.mm.bing.net/th?q=volume+icon&w=200&h=200", "jpeg");
 	// Set the current instrument as `drum`
 	currentInstrument = instruments[4];
 
@@ -79,14 +104,22 @@ void draw() {
 	String heading;
 
 	switch (currentPage) {
-		case 0:
+		case 1:
 			background(bg[2]);
-			heading = "Import";
-			fill(0);
+			heading = "Your Recordings";
 			textSize(16);
 			for (int i = 0; i < exportedFiles.length; i++) {
-				text(exportedFiles[i], 345, 130 + i * 45);
-				image(instrumentImages[instruments.length], 300, 130 + i * 45 - 21, 30, 30);
+				fill(0);
+				text(exportedFiles[i], 355, 130 + i * 45);
+				image(instrumentImages[instruments.length], 310, 130 + i * 45 - 21, 30, 30);
+				if (currentPlaying == i) {
+					image(instrumentImages[instruments.length + 1], 710, 130 + i * 45 - 21, 30, 30);
+				}
+				stroke(0, 0, 0, 50);
+				fill(0, 0, 0, 10);
+				if (mouseX > 300 && mouseX < 747 && mouseY > 130 + i * 45 - 24 && mouseY < 141 + i * 45) {
+					rect(300, 130 + i * 45 - 24, 447, 35, 7);
+				}
 			}
 			break;
 		default:
@@ -95,8 +128,9 @@ void draw() {
 			fill(0);
 			textSize(16);
 			for (int i = 0; i < instruments.length; i++) {
+				fill(0);
 				text(instruments[i].substring(0, 1).toUpperCase() + instruments[i].substring(1) + (currentInstrument == instruments[i] ? " (current)" : ""), 375, 130 + i * 45);
-				image(instrumentImages[i], 300, 130 + i * 45 - 25, 30, 30);
+				image(instrumentImages[i], 310, 130 + i * 45 - 25, 30, 30);
 			}
 			break;
 	}
@@ -142,7 +176,7 @@ void draw() {
 				}
 
 				if (recording == 1) {
-					recordingNotes = append(recordingNotes, str(int(millis() - recordingStartValue)) + " " + readIoString);
+					recordingNotes = append(recordingNotes, currentInstrument + " " + str(int(millis() - recordingStartValue)) + " " + readIoString);
 				}
 
 			// Check if volume knob has moved and update volume
@@ -173,11 +207,26 @@ void mouseClicked() {
 		if (recording == 1) {
 			recording = 0;
 			if (recordingNotes.length > 0) {
-				saveStrings("exports/" + year() + "-" + month() + "-" + day() + "-" + (hour() > 9 ? hour() : "0" + hour()) + (minute() > 9 ? minute() : "0" + minute()) + (second() > 9 ? second() : "0" + second()) + "-" + str(int(random(100000))) + ".txt", recordingNotes);
+				saveStrings("exports/" + year() + "-" + (month() > 9 ? month() : "0" + month()) + "-" + (day() > 9 ? day() : "0" + day()) + "-" + (hour() > 9 ? hour() : "0" + hour()) + (minute() > 9 ? minute() : "0" + minute()) + (second() > 9 ? second() : "0" + second()) + "-" + str(int(random(100000))) + ".drumpad", recordingNotes);
 			}
 		} else {
+			currentPage = 0;
 			recording = 1;
 			recordingStartValue = millis();
+		}
+	} else if (mouseX > 70 && mouseX < 210 && mouseY > 365 && mouseY < 405) {
+		if (currentPage == 1) {
+			currentPage = 0;
+		} else {
+			fetchNewFiles();
+			currentPage = 1;
+		}
+	} else {
+		for (int i = 0; i < exportedFiles.length; i++) {
+			if (mouseX > 300 && mouseX < 747 && mouseY > 130 + i * 45 - 24 && mouseY < 141 + i * 45) {
+				currentPlaying = i;
+				playFile(exportedFiles[i]);
+			}
 		}
 	}
 }
