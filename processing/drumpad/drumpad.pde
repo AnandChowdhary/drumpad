@@ -7,7 +7,7 @@
 import processing.serial.*;
 import processing.sound.*;
 Serial IO;
-PImage bg;
+PImage[] bg = new PImage[2];
 
 // Number of inputs, currently hardcoded to `4`
 int nInputs = 4;
@@ -21,12 +21,16 @@ PImage[] instrumentImages;
 
 int currentPage = 0;
 int volumeReading = 0;
+int recording = 0;
+long recordingStartValue = 0;
+String[] recordingNotes = {};
 
 void setup() {
 
 	// Basic UI
 	size(800, 500);
-	bg = loadImage("bg-default.png");
+	bg[0] = loadImage("bg-default.png");
+	bg[1] = loadImage("bg-recording.png");
 
 	// Find available instruments from samples folder
 	File file = new File(sketchPath() + "/data/samples");
@@ -55,7 +59,7 @@ void setup() {
 
 void draw() {
 
-	background(bg);
+	background(recording == 0 ? bg[0] : bg[1]);
 
 	String heading;
 
@@ -111,6 +115,10 @@ void draw() {
 					}
 				}
 
+				if (recording == 1) {
+					recordingNotes = append(recordingNotes, str(int(millis() - recordingStartValue)) + " " + readIoString);
+				}
+
 			// Check if volume knob has moved and update volume
 			} else if (readIoString.contains("Volume reading")) {
 				volumeReading = int(map(int(readIoString.replace("Volume reading: ", "").trim()), 0, 1023, 0, 100));
@@ -132,4 +140,18 @@ void draw() {
 
 	}
 
+}
+
+void mouseClicked() {
+	if (mouseX > 70 && mouseX < 210 && mouseY > 235 && mouseY < 275) {
+		if (recording == 1) {
+			recording = 0;
+			if (recordingNotes.length > 0) {
+				saveStrings("exports/" + year() + "-" + month() + "-" + day() + "-" + (hour() > 9 ? hour() : "0" + hour()) + (minute() > 9 ? minute() : "0" + minute()) + (second() > 9 ? second() : "0" + second()) + "-" + str(int(random(100000))) + ".txt", recordingNotes);
+			}
+		} else {
+			recording = 1;
+			recordingStartValue = millis();
+		}
+	}
 }
