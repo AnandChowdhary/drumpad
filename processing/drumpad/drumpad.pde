@@ -56,30 +56,59 @@ void fetchNewFiles() {
 
 // These global variables will contain metadata about the currently
 // playing file, e.g., length of track, current position, etc.
-int nowplaying_file = -1;
-long nowPlaying_start = 0;
-int nowPlaying_length = 0;
-int nowPlaying_played = 0;
+int nowplaying_file = -1; // File index
+long nowPlaying_start = 0; // millis() started at
+int nowPlaying_length = 0; // Length of song in millis
+int nowPlaying_played = 0; // Millis currently played
+int nowplaying_currentLine = 0; // Line we're currently playing
+String[] nowPlaying_instructions = {}; // File body data
 
 // The function plays the audio file after user clicks on the title
 // and assigns the global metadata above
 void playFile(String fileName) {
 	playing = 1;
-	String[] soundInstructions = {};
 	// Try to play the file
 	// Will catch exception if file doesn't exist
 	try {
 		String[] musicLines = loadStrings(sketchPath() + "/exports/" + fileName);
 		for (int i = 0; i < musicLines.length; i++) {
 			if (!musicLines[i].equals("")) {
-				soundInstructions = append(soundInstructions, musicLines[i]);
+				nowPlaying_instructions = append(nowPlaying_instructions, musicLines[i]);
 			}
 		}
 	} catch(RuntimeException e) {
 		println("Error: Could not find the required sound file");
 	}
-	nowPlaying_length = int(split(soundInstructions[soundInstructions.length - 1], " ")[1]);
+	nowPlaying_length = int(split(nowPlaying_instructions[nowPlaying_instructions.length - 1], " ")[1]);
 	nowPlaying_start = millis();
+}
+
+void playSound(String instrument, String dataString) {
+	// Loop through each instrument in input
+	// and play song if user pressed the input
+	for (int i = 0; i < nInputs; i++) {
+		if (dataString.charAt(i) == '1') {
+
+			SoundFile audioSample;
+
+			// Try to play the file
+			// Will catch exception if file doesn't exist
+			try {
+				audioSample = new SoundFile(this, "samples/" + instrument + "/" + str(i) + ".wav");
+				audioSample.amp(float(volumeReading) / 100);
+				audioSample.play();
+			} catch(RuntimeException e) {
+				println("Error: Could not find the required sound file");
+			}
+
+		}
+	}
+
+	// If we're currently recording, add this line
+	// in the global array `recordingNotes`
+	if (recording == 1) {
+		recordingNotes = append(recordingNotes, instrument + " " + str(int(millis() - recordingStartValue)) + " " + dataString);
+	}
 }
 
 // This function takes any milisecond value and returns
@@ -141,25 +170,39 @@ void draw() {
 	String heading;
 
 	switch (currentPage) {
+
+		// 1 -> "Your Recordings" page
 		case 1:
+
 			background(bg[2]);
 			heading = "Your Recordings";
 			textSize(16);
+
+			// List each file from `exportedFiles` array
 			for (int i = 0; i < exportedFiles.length; i++) {
+
 				fill(0);
 				text(exportedFiles[i], 355, 130 + i * 45);
 				image(instrumentImages[instruments.length], 310, 130 + i * 45 - 21, 30, 30);
+
+				// Show the "Now Playing" icon if playing this file
 				if (nowplaying_file == i) {
 					image(instrumentImages[instruments.length + 1], 710, 130 + i * 45 - 21, 30, 30);
 				}
-				stroke(0, 0, 0, 50);
-				fill(0, 0, 0, 10);
+
+				// Feedback on mouseover on a file
 				if (mouseX > 300 && mouseX < 747 && mouseY > 130 + i * 45 - 24 && mouseY < 141 + i * 45) {
+					stroke(0, 0, 0, 50);
+					fill(0, 0, 0, 10);
 					rect(300, 130 + i * 45 - 24, 447, 35, 7);
 				}
+
 			}
-			textSize(12);
+
+			// UI for audio player on bottom
+			// Shows only when a file is being played
 			if (playing == 1) {
+				textSize(12);
 				fill(0);
 				text(millisToMMSS(nowPlaying_played), 300, 447);
 				text(millisToMMSS(nowPlaying_length), 715, 447);
@@ -170,7 +213,10 @@ void draw() {
 				rect(345, 440, map(nowPlaying_played, 0, nowPlaying_length, 0, 360), 5);
 				ellipse(map(nowPlaying_played, 0, nowPlaying_length, 345, 700), 443, 12, 12);
 			}
+
 			break;
+
+		// default -> "Your Band" home page
 		default:
 			background(recording == 0 ? bg[0] : bg[1]);
 			heading = "Your Band";
@@ -182,6 +228,7 @@ void draw() {
 				image(instrumentImages[i], 310, 130 + i * 45 - 25, 30, 30);
 			}
 			break;
+
 	}
 
 	// Display the heading on screen
@@ -206,31 +253,7 @@ void draw() {
 			// Check whether we have potentiometer reading or instrument
 			if (!readIoString.contains("Potentiometer") && !readIoString.contains("Volume")) {
 
-				// Loop through each instrument in input
-				// and play song if user pressed the input
-				for (int i = 0; i < nInputs; i++) {
-					if (readIoString.charAt(i) == '1') {
-
-						SoundFile audioSample;
-
-						// Try to play the file
-						// Will catch exception if file doesn't exist
-						try {
-							audioSample = new SoundFile(this, "samples/" + currentInstrument + "/" + str(i) + ".wav");
-							audioSample.amp(float(volumeReading) / 100);
-							audioSample.play();
-						} catch(RuntimeException e) {
-							println("Error: Could not find the required sound file");
-						}
-
-					}
-				}
-
-				// If we're currently recording, add this line
-				// in the global array `recordingNotes`
-				if (recording == 1) {
-					recordingNotes = append(recordingNotes, currentInstrument + " " + str(int(millis() - recordingStartValue)) + " " + readIoString);
-				}
+				playSound(currentInstrument, readIoString);
 
 			// Check if volume knob has moved and update volume
 			} else if (readIoString.contains("Volume reading")) {
@@ -253,14 +276,24 @@ void draw() {
 
 	}
 
-	// If we're currently playing from the file system,
-	// update `nowPlaying_played`, or stop if we're done
+	// If we're currently playing a file
 	if (playing == 1) {
+
+		int currentLine_time = int(split(nowPlaying_instructions[nowplaying_currentLine], " ")[1]);
+		String currentLine_instrument = split(nowPlaying_instructions[nowplaying_currentLine], " ")[0];
+		String currentLine_dataString = split(nowPlaying_instructions[nowplaying_currentLine], " ")[2];
+		if (nowPlaying_played > currentLine_time && (nowplaying_currentLine + 1) < nowPlaying_instructions.length) {
+			playSound(currentLine_instrument, currentLine_dataString);
+			nowplaying_currentLine++;
+		}
+
+		// update `nowPlaying_played`, or stop playing if we're done
 		nowPlaying_played = int(millis() - nowPlaying_start);
 		if (nowPlaying_played > nowPlaying_length) {
 			playing = 0;
 			nowplaying_file = -1;
 		}
+
 	}
 
 }
