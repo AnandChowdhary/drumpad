@@ -7,6 +7,8 @@
 import processing.serial.*;
 import processing.sound.*;
 Serial IO;
+
+// The array will store the initialized background images
 PImage[] bg = new PImage[3];
 
 // Number of inputs, currently hardcoded to `4`
@@ -24,12 +26,25 @@ String currentInstrument;
 // This global array will contain the image for each instrument
 PImage[] instrumentImages;
 
+// Tracks which page the user is currently on
+/*
+* 0 -> "Your Band" home screen
+* 1 -> "Your Recordings" import screen
+*/
 int currentPage = 1;
+
+// Volume reading from the potentiometer stored here (0 to 100)
 int volumeReading = 0;
+
+// Keep track of whether we are currently recording or playing
 int recording = 0, playing = 0;
+
+// These variables store recording metadata and body
 long recordingStartValue = 0;
 String[] recordingNotes = {};
 
+// This function fetches files from the `exports` folder
+// and assigns the global array `exportedFiles` with its value
 void fetchNewFiles() {
 	File file = new File(sketchPath() + "/exports");
 	exportedFiles = new String[file.list().length];
@@ -39,12 +54,15 @@ void fetchNewFiles() {
 	}
 }
 
-// This global variable will contain the currently playing file
+// These global variables will contain metadata about the currently
+// playing file, e.g., length of track, current position, etc.
 int nowplaying_file = -1;
 long nowPlaying_start = 0;
 int nowPlaying_length = 0;
 int nowPlaying_played = 0;
 
+// The function plays the audio file after user clicks on the title
+// and assigns the global metadata above
 void playFile(String fileName) {
 	playing = 1;
 	String[] soundInstructions = {};
@@ -64,10 +82,10 @@ void playFile(String fileName) {
 	nowPlaying_start = millis();
 }
 
+// This function takes any milisecond value and returns
+// a string in the format `MM:SS` (minutes:seconds)
 String millisToMMSS(int millis) {
-	// Round to next largest second
 	int minutes = 0, seconds;
-	seconds = int((float(millis) + 900) / 1000);
 	seconds = int((float(millis)) / 1000);
 	minutes = seconds / 60;
 	seconds = seconds % 60;
@@ -78,11 +96,13 @@ void setup() {
 
 	// Basic UI
 	size(800, 500);
+
+	// Load background images
 	bg[0] = loadImage("bg-default.png");
 	bg[1] = loadImage("bg-recording.png");
 	bg[2] = loadImage("bg-import.png");
 
-	// Fetch exported sound files
+	// Fetch exported sound files from disk
 	fetchNewFiles();
 
 	// Find available instruments from samples folder
@@ -94,13 +114,15 @@ void setup() {
 			instruments = append(instruments, subFile.getName());
 		}
 	}
+	// Load images for each instrument
+	// Uses an unofficial Bing Image Search API that I discovered
 	instrumentImages = new PImage[instruments.length + 2];
 	for (int i = 0; i < instruments.length; i++) {
 		instrumentImages[i] = loadImage("https://tse2.mm.bing.net/th?q=" + instruments[i] + "&w=200&h=200", "jpeg");
 	}
 	instrumentImages[instruments.length] = loadImage("https://tse2.mm.bing.net/th?q=music+folder+icon&w=200&h=200", "jpeg");
 	instrumentImages[instruments.length + 1] = loadImage("https://tse2.mm.bing.net/th?q=volume+icon&w=200&h=200", "jpeg");
-	// Set the current instrument as `drum`
+	// Set the current instrument as `drum` because why not
 	currentInstrument = instruments[4];
 
 	// Start listening to Arduino's serial
@@ -114,6 +136,8 @@ void setup() {
 
 void draw() {
 
+	// This is the heading text displayed on each screen
+	// The following `switch` statement assigns this value
 	String heading;
 
 	switch (currentPage) {
@@ -160,10 +184,12 @@ void draw() {
 			break;
 	}
 
+	// Display the heading on screen
 	fill(0);
 	textSize(24);
 	text(heading, 310, 80); 
 
+	// Display potentiometer's volume reading
 	textSize(13);
 	text(str(volumeReading) + "%", 177, 323);
 
@@ -200,6 +226,8 @@ void draw() {
 					}
 				}
 
+				// If we're currently recording, add this line
+				// in the global array `recordingNotes`
 				if (recording == 1) {
 					recordingNotes = append(recordingNotes, currentInstrument + " " + str(int(millis() - recordingStartValue)) + " " + readIoString);
 				}
@@ -225,6 +253,8 @@ void draw() {
 
 	}
 
+	// If we're currently playing from the file system,
+	// update `nowPlaying_played`, or stop if we're done
 	if (playing == 1) {
 		nowPlaying_played = int(millis() - nowPlaying_start);
 		if (nowPlaying_played > nowPlaying_length) {
@@ -235,18 +265,31 @@ void draw() {
 
 }
 
+// There are several occassions when a user
+// may click on something on the screen
 void mouseClicked() {
+
+	// Click handler for the "Record" button
 	if (mouseX > 70 && mouseX < 210 && mouseY > 235 && mouseY < 275) {
+		// Check if we're currently recording
+		// If we are, stop recording and save file
 		if (recording == 1) {
 			recording = 0;
 			if (recordingNotes.length > 0) {
+				// This saves the values in a file with title:
+				// YYYY-MM-DD-HHMMSS-XXXXX.drumpad
+				// where XXXXX is a 5-digit pseudorandom number
 				saveStrings("exports/" + year() + "-" + (month() > 9 ? month() : "0" + month()) + "-" + (day() > 9 ? day() : "0" + day()) + "-" + (hour() > 9 ? hour() : "0" + hour()) + (minute() > 9 ? minute() : "0" + minute()) + (second() > 9 ? second() : "0" + second()) + "-" + str(int(random(100000))) + ".drumpad", recordingNotes);
 			}
+		// If we're not, start recording
 		} else {
 			currentPage = 0;
 			recording = 1;
 			recordingStartValue = millis();
 		}
+
+	// Click handler for the "Import" button
+	// Toggle between "Your Recordings" and "Your Band" pages
 	} else if (mouseX > 70 && mouseX < 210 && mouseY > 365 && mouseY < 405) {
 		if (currentPage == 1) {
 			currentPage = 0;
@@ -254,12 +297,17 @@ void mouseClicked() {
 			fetchNewFiles();
 			currentPage = 1;
 		}
+
+	// Click handler for music files in "Your Recordings"
 	} else {
 		for (int i = 0; i < exportedFiles.length; i++) {
+			// Check if any of the recordings have been clicked
 			if (mouseX > 300 && mouseX < 747 && mouseY > 130 + i * 45 - 24 && mouseY < 141 + i * 45) {
+				// If yes, start playing that file
 				nowplaying_file = i;
 				playFile(exportedFiles[i]);
 			}
 		}
 	}
+
 }
