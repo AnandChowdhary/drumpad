@@ -21,9 +21,6 @@ String[] exportedFiles;
 // This global variable will contain the current instrument
 String currentInstrument;
 
-// This global variable will contain the currently playing file
-int currentPlaying = -1;
-
 // This global array will contain the image for each instrument
 PImage[] instrumentImages;
 
@@ -42,8 +39,12 @@ void fetchNewFiles() {
 	}
 }
 
+// This global variable will contain the currently playing file
+int nowplaying_file = -1;
+long nowPlaying_start = 0;
 int nowPlaying_length = 0;
 int nowPlaying_played = 0;
+
 void playFile(String fileName) {
 	playing = 1;
 	String[] soundInstructions = {};
@@ -60,6 +61,7 @@ void playFile(String fileName) {
 		println("Error: Could not find the required sound file");
 	}
 	nowPlaying_length = int(split(soundInstructions[soundInstructions.length - 1], " ")[1]);
+	nowPlaying_start = millis();
 }
 
 String millisToMMSS(int millis) {
@@ -113,9 +115,6 @@ void setup() {
 void draw() {
 
 	String heading;
-	if (nowPlaying_played < (nowPlaying_length - 100)) {
-		nowPlaying_played+=10;
-	}
 
 	switch (currentPage) {
 		case 1:
@@ -126,7 +125,7 @@ void draw() {
 				fill(0);
 				text(exportedFiles[i], 355, 130 + i * 45);
 				image(instrumentImages[instruments.length], 310, 130 + i * 45 - 21, 30, 30);
-				if (currentPlaying == i) {
+				if (nowplaying_file == i) {
 					image(instrumentImages[instruments.length + 1], 710, 130 + i * 45 - 21, 30, 30);
 				}
 				stroke(0, 0, 0, 50);
@@ -145,6 +144,7 @@ void draw() {
 				rect(345, 440, 360, 5);
 				fill(155, 89, 282);
 				rect(345, 440, map(nowPlaying_played, 0, nowPlaying_length, 0, 360), 5);
+				ellipse(map(nowPlaying_played, 0, nowPlaying_length, 345, 700), 443, 12, 12);
 			}
 			break;
 		default:
@@ -225,6 +225,14 @@ void draw() {
 
 	}
 
+	if (playing == 1) {
+		nowPlaying_played = int(millis() - nowPlaying_start);
+		if (nowPlaying_played > nowPlaying_length) {
+			playing = 0;
+			nowplaying_file = -1;
+		}
+	}
+
 }
 
 void mouseClicked() {
@@ -249,7 +257,7 @@ void mouseClicked() {
 	} else {
 		for (int i = 0; i < exportedFiles.length; i++) {
 			if (mouseX > 300 && mouseX < 747 && mouseY > 130 + i * 45 - 24 && mouseY < 141 + i * 45) {
-				currentPlaying = i;
+				nowplaying_file = i;
 				playFile(exportedFiles[i]);
 			}
 		}
