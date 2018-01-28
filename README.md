@@ -12,6 +12,10 @@ Drumpad is an Ardunio-based music generator built for my Programming and Physica
 
 ![Your Recordings screen on Drumpad](https://user-images.githubusercontent.com/2841780/35483171-45f17602-043f-11e8-95ef-ea94c69a0ab4.png)
 
+### Real-life shot
+
+![Arduino image](https://user-images.githubusercontent.com/2841780/35484050-57e60e4e-044a-11e8-9c55-215c004f9fa5.jpg)
+
 ## Toolkit
 
 ### Materials
