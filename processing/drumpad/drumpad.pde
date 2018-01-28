@@ -42,9 +42,11 @@ void fetchNewFiles() {
 	}
 }
 
+int nowPlaying_length = 0;
+int nowPlaying_played = 0;
 void playFile(String fileName) {
+	playing = 1;
 	String[] soundInstructions = {};
-	String songLength;
 	// Try to play the file
 	// Will catch exception if file doesn't exist
 	try {
@@ -57,8 +59,17 @@ void playFile(String fileName) {
 	} catch(RuntimeException e) {
 		println("Error: Could not find the required sound file");
 	}
-	songLength = soundInstructions[soundInstructions.length - 1];
-	println("LENGTH: " + songLength);
+	nowPlaying_length = int(split(soundInstructions[soundInstructions.length - 1], " ")[1]);
+}
+
+String millisToMMSS(int millis) {
+	// Round to next largest second
+	int minutes = 0, seconds;
+	seconds = int((float(millis) + 900) / 1000);
+	seconds = int((float(millis)) / 1000);
+	minutes = seconds / 60;
+	seconds = seconds % 60;
+	return (minutes > 9 ? minutes : "0" + minutes) + ":" + (seconds > 9 ? seconds : "0" + seconds);
 }
 
 void setup() {
@@ -102,6 +113,9 @@ void setup() {
 void draw() {
 
 	String heading;
+	if (nowPlaying_played < (nowPlaying_length - 100)) {
+		nowPlaying_played+=10;
+	}
 
 	switch (currentPage) {
 		case 1:
@@ -120,6 +134,17 @@ void draw() {
 				if (mouseX > 300 && mouseX < 747 && mouseY > 130 + i * 45 - 24 && mouseY < 141 + i * 45) {
 					rect(300, 130 + i * 45 - 24, 447, 35, 7);
 				}
+			}
+			textSize(12);
+			if (playing == 1) {
+				fill(0);
+				text(millisToMMSS(nowPlaying_played), 300, 447);
+				text(millisToMMSS(nowPlaying_length), 715, 447);
+				stroke(0, 0, 0, 0);
+				fill(225, 225, 225);
+				rect(345, 440, 360, 5);
+				fill(155, 89, 282);
+				rect(345, 440, map(nowPlaying_played, 0, nowPlaying_length, 0, 360), 5);
 			}
 			break;
 		default:
