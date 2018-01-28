@@ -7,13 +7,16 @@
 import processing.serial.*;
 import processing.sound.*;
 Serial IO;
-PImage[] bg = new PImage[2];
+PImage[] bg = new PImage[3];
 
 // Number of inputs, currently hardcoded to `4`
 int nInputs = 4;
 
 // This global array will contain list of available instruments
 String[] instruments = {};
+
+// This global array will contain list of exported files
+String[] exportedFiles = {};
 
 // This global variable will contain the current instrument
 String currentInstrument;
@@ -25,12 +28,25 @@ int recording = 0;
 long recordingStartValue = 0;
 String[] recordingNotes = {};
 
+void fetchNewFiles() {
+	File file = new File(sketchPath() + "/exports");
+	for (int i = 0; i < file.list().length; i++) {
+		File subFile = new File(sketchPath() + "/exports/" + file.list()[i]);
+		exportedFiles = append(exportedFiles, subFile.getName());
+	}
+	println(exportedFiles);
+}
+
 void setup() {
 
 	// Basic UI
 	size(800, 500);
 	bg[0] = loadImage("bg-default.png");
 	bg[1] = loadImage("bg-recording.png");
+	bg[2] = loadImage("bg-import.png");
+
+	// Fetch exported sound files
+	fetchNewFiles();
 
 	// Find available instruments from samples folder
 	File file = new File(sketchPath() + "/data/samples");
@@ -41,10 +57,11 @@ void setup() {
 			instruments = append(instruments, subFile.getName());
 		}
 	}
-	instrumentImages = new PImage[instruments.length];
+	instrumentImages = new PImage[instruments.length + 1];
 	for (int i = 0; i < instruments.length; i++) {
 		instrumentImages[i] = loadImage("https://tse2.mm.bing.net/th?q=" + instruments[i] + "&w=200&h=200", "jpeg");
 	}
+	instrumentImages[instruments.length] = loadImage("https://tse2.mm.bing.net/th?q=music+folder+icon&w=200&h=200", "jpeg");
 	// Set the current instrument as `drum`
 	currentInstrument = instruments[4];
 
@@ -59,18 +76,27 @@ void setup() {
 
 void draw() {
 
-	background(recording == 0 ? bg[0] : bg[1]);
-
 	String heading;
 
 	switch (currentPage) {
+		case 0:
+			background(bg[2]);
+			heading = "Import";
+			fill(0);
+			textSize(16);
+			for (int i = 0; i < exportedFiles.length; i++) {
+				text(exportedFiles[i], 345, 130 + i * 45);
+				image(instrumentImages[instruments.length], 300, 130 + i * 45 - 21, 30, 30);
+			}
+			break;
 		default:
+			background(recording == 0 ? bg[0] : bg[1]);
 			heading = "Your Band";
 			fill(0);
 			textSize(16);
 			for (int i = 0; i < instruments.length; i++) {
 				text(instruments[i].substring(0, 1).toUpperCase() + instruments[i].substring(1) + (currentInstrument == instruments[i] ? " (current)" : ""), 375, 130 + i * 45);
-				image(instrumentImages[i], 300, 130 + i * 45 - 25, 50, 50);
+				image(instrumentImages[i], 300, 130 + i * 45 - 25, 30, 30);
 			}
 			break;
 	}
