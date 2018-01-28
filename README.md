@@ -2,6 +2,8 @@
 
 Drumpad is an Ardunio-based music generator built for my Programming and Physical Computing project, Module 2 (Smart Environments) of Creative Technology BSc at the University of Twente.
 
+Demo video: https://photos.app.goo.gl/tPB6ctdRPL0f0L7h2
+
 ## Screenshots
 
 ### *Your Band* screen
